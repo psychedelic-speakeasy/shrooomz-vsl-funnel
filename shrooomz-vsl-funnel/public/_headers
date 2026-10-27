@@ -1,0 +1,6 @@
+/checkout
+  X-Robots-Tag: noindex
+/upsell-*
+  X-Robots-Tag: noindex
+/thank-you
+  X-Robots-Tag: noindex

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your free video</title>
+<!--
+  VSL page mock-up for Michael's developer (Hell Rich Media, v2 26 Oct 2026). Route: /watch?email=...
+  Layout modelled on the Maxweb offer pages: package cards like Sugar Reset, page order like Balmorex Pro
+  (video, packages, product, reviews, guarantee, packages again, footer).
+  IMAGES (img/): package shots built from his own product photos with the backgrounds removed, Maxweb style:
+  one 20-count jar per month (1, 3 and 6 jars), so the capsules shown match the order (20, 60, 120).
+  video-poster.jpg is a frame from his Winning Blue Shirt ad, a stand-in until the VSL is recorded.
+  Anything in [square brackets] is a placeholder for Michael to confirm. Only claims he can stand behind.
+  1. VIDEO: replace the .player placeholder with the Vturb embed code. In Vturb: hide the progress bar and
+     disable seeking (no skipping), autoplay muted with the "click to unmute" overlay, smart autoplay on.
+  2. REVEAL: everything inside .reveal stays hidden until the price point (about 6:15 in the final edit).
+     Use Vturb's "delayed elements" for this (give the wrapper the class Vturb asks for and set the second in the
+     Vturb panel), then delete the fallback script at the bottom. Add ?reveal=1 to the URL to preview the packages.
+  3. BUTTONS: each package goes to checkout with the plan and the email carried over, e.g.
+     /tabloid-checkout?plan=6m&email=... (checkout preselects that plan). VSL buyers skip upsell 1 (supply length)
+     and go straight to upsell 2. 6-month buyers can be offered the 12-month upgrade instead.
+     The second package row near the bottom is a copy of the first, made by the script (one place to edit).
+  4. TRACKING: Meta pixel PageView + ViewContent, Cortana script (async), a variant tag (vsl) so reports split
+     the A/B test. No render-blocking scripts or web fonts in the head.
+-->
+<style>
+  :root { --bg:#0a0a0a; --ink:#fff; --muted:#a3a3a3; --gold:#facc15; --gold2:#eab308; --dark:#111; --line:#e5e7eb;
+          --paper:#fff; --soft:#f5f5f4; --text:#111827; --green:#16a34a; --band:#1f2937; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.4; }
+  .wrap { text-align:center; }
+  .top { max-width:792px; margin:0 auto; padding:24px 16px 0; }
+  .logo { margin-bottom:14px; } .logo svg { display:inline-block; }
+  h1 { font-size:30px; line-height:1.15; font-weight:900; margin-bottom:10px; }
+  h1 span { color:var(--gold); }
+  .sub { font-size:17px; font-weight:600; color:#e5e7eb; margin-bottom:16px; }
+  .load { display:inline-block; background:#262626; color:#d4d4d4; font-size:12px; padding:4px 18px; border-radius:8px 8px 0 0; }
+  .player { position:relative; aspect-ratio:16/9; overflow:hidden; border:4px solid #262626; background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)), url('img/video-poster.jpg') center/cover #0b0f19; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+  .player .play { width:78px; height:78px; border-radius:50%; background:rgba(250,204,21,.95); display:flex; align-items:center; justify-content:center; }
+  .player .play:after { content:""; border-style:solid; border-width:15px 0 15px 25px; border-color:transparent transparent transparent #000; margin-left:6px; }
+  .player .tag { position:absolute; bottom:12px; left:0; right:0; font-size:13px; font-weight:700; color:#e5e7eb; }
+  .warn { font-size:14px; color:var(--muted); margin-bottom:26px; }
+  .warn b { color:#fff; }
+
+  .reveal { display:none; }
+  .reveal.show { display:block; animation:fade .6s ease; }
+  @keyframes fade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  /* Banner above the packages (Balmorex style) */
+  .claim { background:var(--gold); color:#000; padding:18px 16px 26px; clip-path:polygon(0 0,100% 0,100% 82%,52% 82%,50% 100%,48% 82%,0 82%); }
+  .claim .step { font-size:13px; font-weight:900; letter-spacing:.14em; opacity:.75; }
+  .claim h2 { font-size:26px; font-weight:900; line-height:1.15; }
+
+  /* Package cards (Sugar Reset style). 1 Month | 6 Months (pops out) | 3 Months on every screen. */
+  .offer { background:var(--paper); color:var(--text); padding:26px 16px 30px; }
+  .pkgs { display:grid; grid-template-columns:1fr 1.12fr 1fr; gap:8px; align-items:center; max-width:980px; margin:0 auto; }
+  .pkg { background:#fff; border:3px solid var(--dark); border-radius:16px; overflow:hidden; box-shadow:0 8px 22px rgba(0,0,0,.18); }
+  .pkg .ph { background:var(--dark); color:#fff; font-weight:800; font-size:13px; padding:7px 4px; }
+  .pkg .pb { padding:10px 6px 12px; }
+  .pkg h3 { font-size:17px; font-weight:900; letter-spacing:.01em; line-height:1.05; }
+  .pkg .sup { font-size:12px; color:#4b5563; margin-top:2px; }
+  .pkg img { display:block; width:100%; max-width:200px; height:96px; object-fit:contain; margin:8px auto; }
+  .price { display:flex; align-items:center; justify-content:center; gap:3px; line-height:.9; }
+  .price .d { font-size:16px; font-weight:800; align-self:flex-end; margin-bottom:4px; }
+  .price .n { font-size:40px; font-weight:900; letter-spacing:-.03em; }
+  .price .c { font-size:14px; font-weight:900; align-self:flex-start; margin-top:2px; }
+  .price .u { font-size:11px; font-weight:800; text-align:left; line-height:1.05; align-self:flex-end; margin-bottom:3px; }
+  .ck { display:flex; align-items:center; justify-content:center; gap:5px; font-size:10px; font-weight:800; text-transform:uppercase; padding:6px 0; }
+  .ck:before { content:"\2713"; display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border:1.5px solid currentColor; border-radius:50%; font-size:9px; flex:none; }
+  .ck.save { color:#a16207; border-bottom:1.5px dotted #6b7280; }
+  .btn { display:block; text-decoration:none; font-weight:900; font-size:13px; padding:11px 4px; border-radius:6px; margin:8px 0 8px; background:linear-gradient(#e5e5e5,#bdbdbd); color:#000; }
+  .btn:before { content:"\1F6D2  "; }
+  .cards { display:flex; justify-content:center; gap:4px; margin-bottom:6px; }
+  .cc { width:34px; height:22px; border-radius:3px; border:1px solid #d1d5db; background:#fff; font-size:7px; font-weight:900; display:flex; align-items:center; justify-content:center; }
+  .cc.visa { color:#1a1f71; font-size:9px; font-style:italic; }
+  .cc.mc:before { content:""; width:11px; height:11px; border-radius:50%; background:#eb001b; box-shadow:6px 0 0 rgba(247,158,27,.9); margin-right:6px; }
+  .cc.amex { background:#2e77bc; color:#fff; border-color:#2e77bc; }
+  .cc.disc { color:#111; font-size:6px; }
+  .tot { font-size:14px; }
+  .tot s { color:#6b7280; }
+  .tot b { font-weight:900; }
+  .ship { font-size:13px; font-weight:800; margin-top:2px; }
+
+  .pkg.best { border-color:var(--gold); background:linear-gradient(160deg,#1f1f1f,#000); color:#fff; transform:scale(1.04); z-index:1; box-shadow:0 14px 34px rgba(0,0,0,.35); }
+  .pkg.best .ph { background:#fff; color:#b91c1c; font-size:14px; }
+  .pkg.best .sup { color:#d4d4d4; }
+  .pkg.best img { height:auto; max-width:100%; }
+  .pkg.best .ck.save { color:var(--gold); border-color:#525252; }
+  .pkg.best .ck.big { border-bottom:1.5px dotted #525252; }
+  .pkg.best .btn { background:linear-gradient(var(--gold),var(--gold2)); font-size:15px; padding:13px 4px; }
+  .pkg.best .tot s { color:#a3a3a3; }
+  .pkg.best .ship em { color:var(--gold); font-style:normal; }
+
+  @media (max-width:559px) {
+    .pkg .ph { font-size:10px; } .pkg.best .ph { font-size:11px; }
+    .pkg h3 { font-size:14px; }
+    .price .n { font-size:30px; } .price .d { font-size:12px; } .price .c { font-size:11px; } .price .u { font-size:8px; }
+    .ck { font-size:8px; } .ck.g, .cards { display:none; }
+    .btn { font-size:11px; padding:10px 2px; } .btn:before { content:""; } .pkg.best .btn { font-size:12px; }
+    .tot, .ship { font-size:11px; }
+  }
+  @media (min-width:700px) {
+    .pkgs { gap:22px; }
+    .pkg .ph { font-size:16px; padding:9px; } .pkg.best .ph { font-size:17px; }
+    .pkg .pb { padding:14px 14px 18px; }
+    .pkg h3 { font-size:28px; } .pkg .sup { font-size:16px; }
+    .pkg img { height:150px; } .pkg.best img { height:auto; max-width:100%; }
+    .price .n { font-size:72px; } .price .d { font-size:26px; } .price .c { font-size:22px; } .price .u { font-size:16px; }
+    .ck { font-size:12px; padding:8px 0; } .ck:before { width:17px; height:17px; font-size:11px; }
+    .btn { font-size:19px; padding:16px; } .pkg.best .btn { font-size:20px; padding:18px; }
+    .cc { width:44px; height:28px; font-size:9px; } .cc.visa { font-size:12px; }
+    .tot, .ship { font-size:19px; }
+    .claim h2 { font-size:36px; }
+  }
+
+  /* Light sections under the packages */
+  .sec { background:var(--paper); color:var(--text); padding:10px 16px 34px; }
+  .prod { max-width:900px; margin:0 auto; display:grid; grid-template-columns:1fr; gap:18px; align-items:center; background:var(--soft); border-radius:14px; padding:20px; text-align:left; }
+  .prod img { width:100%; max-width:200px; margin:0 auto; display:block; }
+  .prod h3 { font-size:19px; font-weight:800; margin-bottom:10px; }
+  .prod p { font-size:15px; margin-bottom:12px; color:#374151; }
+  .prod p b { color:var(--text); }
+  @media (min-width:700px) { .prod { grid-template-columns:2fr 3fr; padding:28px; } .prod img { max-width:300px; } }
+
+  .dark { background:#171717; padding:34px 16px; }
+  .dark h2, .sec h2 { font-size:26px; font-weight:900; margin-bottom:4px; }
+  .dark h2 { color:var(--gold); }
+  .h2sub { font-size:16px; margin-bottom:20px; }
+  .revs { max-width:980px; margin:0 auto; display:grid; grid-template-columns:1fr; gap:16px; }
+  @media (min-width:700px) { .revs { grid-template-columns:1fr 1fr; } .revs .rev:last-child { grid-column:1 / -1; max-width:680px; margin:0 auto; } }
+  .rev { background:#0b1120; border-radius:12px; padding:20px 22px; text-align:left; }
+  .rev .t { font-size:16px; margin-bottom:12px; }
+  .rev .t b { font-weight:800; }
+  .rev p { font-style:italic; color:#e5e7eb; font-size:15px; line-height:1.6; margin-bottom:14px; }
+  .rev .who { display:flex; align-items:center; gap:12px; }
+  .av { width:52px; height:52px; border-radius:50%; border:3px solid var(--gold2); background:#374151; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px; }
+  .stars span { display:inline-block; width:24px; height:24px; background:#d97706; color:#fff; font-size:16px; line-height:24px; margin-right:2px; text-align:center; }
+
+  .guar { max-width:900px; margin:30px auto 0; background:#fff; color:var(--text); border-radius:14px; padding:26px 22px; display:grid; grid-template-columns:1fr; gap:18px; align-items:center; text-align:left; }
+  .dark .guar h2 { text-align:center; font-weight:700; font-size:24px; margin-bottom:10px; color:var(--text); }
+  .guar p { font-size:15px; color:#374151; margin-bottom:10px; }
+  .seal { width:150px; height:150px; margin:0 auto; border-radius:50%; background:radial-gradient(circle,#1e293b 56%,var(--gold2) 57%,#f59e0b 70%,#b45309 72%); display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-weight:900; text-align:center; line-height:1.05; }
+  .seal b { font-size:30px; } .seal small { font-size:11px; letter-spacing:.06em; }
+  @media (min-width:700px) { .guar { grid-template-columns:200px 1fr; padding:32px; } }
+
+  .faq { max-width:760px; margin:30px auto 0; text-align:left; }
+  .faq h2 { text-align:center; color:#fff; }
+  .faq h3 { font-size:16px; margin:16px 0 4px; color:#fff; }
+  .faq p { color:#d1d5db; font-size:15px; }
+
+  footer { background:#1c1c1c; color:#d4d4d4; padding:30px 16px 24px; font-size:12px; line-height:1.6; }
+  footer .in { max-width:980px; margin:0 auto; display:grid; grid-template-columns:1fr; gap:18px; text-align:left; }
+  footer .brand { margin-bottom:10px; }
+  footer a { color:#e5e5e5; text-decoration:none; display:block; font-size:14px; margin-bottom:6px; }
+  footer p { margin-bottom:10px; }
+  footer .copy { text-align:center; margin-top:18px; color:#a3a3a3; }
+  @media (min-width:700px) { footer .in { grid-template-columns:200px 1fr; } }
+</style>
+</head>
+<body data-page="watch">
+<div class="wrap">
+  <div class="top">
+    <div class="logo"><svg aria-label="Shrooomz" role="img" width="44" height="44" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 10C28 10 12 28 12 44C12 52 18 58 30 58H70C82 58 88 52 88 44C88 28 72 10 50 10Z" fill="#2B5EA7"></path><path d="M50 10C50 10 62 22 62 44H38C38 22 50 10 50 10Z" fill="rgba(255,255,255,0.15)"></path><circle cx="38" cy="32" r="5" fill="rgba(255,255,255,0.3)"></circle><rect x="42" y="58" width="16" height="32" rx="8" fill="#2B5EA7"></rect></svg></div>
+    <h1>The Mushroom Your Doctor <span>Won't Tell You About</span></h1>
+    <p class="sub">Watch the short video below. The tiny morning dose people are quietly taking instead of another refill.</p>
+    <div class="load">Please allow up to 5 seconds for the video to load</div>
+    <!-- VTURB EMBED GOES HERE (replace this whole .player div) -->
+    <div class="player"><div class="play"></div><div class="tag">Tap to play with sound</div></div>
+    <p class="warn"><b>Please watch to the end.</b> We can't promise this video will stay up.</p>
+  </div>
+
+  <!-- HIDDEN UNTIL THE PRICE POINT (Vturb delayed elements) -->
+  <div class="reveal" id="offer">
+    <div class="claim">
+      <div class="step">STEP 1</div>
+      <h2>Select Your Discount Package</h2>
+    </div>
+
+    <div class="offer">
+      <div class="pkgs" id="pkgs">
+        <div class="pkg">
+          <div class="ph">Starter</div>
+          <div class="pb">
+            <h3>1 MONTH</h3>
+            <div class="sup">20 Capsules</div>
+            <img src="img/pkg-1m.png" alt="Secret Shrooomz 1 month supply">
+            <div class="price"><span class="d">$</span><span class="n">99</span><span class="u">Per<br>Month</span></div>
+            <div class="ck save">Try it first</div>
+            <div class="ck g">[X] day guarantee</div>
+            <a class="btn" href="/checkout?plan=1m">BUY NOW</a>
+            <div class="cards"><span class="cc visa">VISA</span><span class="cc mc"></span><span class="cc disc">DISCOVER</span><span class="cc amex">AMEX</span></div>
+            <div class="tot">TOTAL: <b>$99</b></div>
+            <div class="ship">+ [shipping]</div>
+          </div>
+        </div>
+        <div class="pkg best">
+          <div class="ph">BEST OFFER!</div>
+          <div class="pb">
+            <h3>6 MONTHS</h3>
+            <div class="sup">120 Capsules</div>
+            <img src="img/pkg-6m.png" alt="Secret Shrooomz 6 month supply">
+            <div class="price"><span class="d">$</span><span class="n">49</span><span class="c">.50</span><span class="u">Per<br>Month</span></div>
+            <div class="ck save">You save $297</div>
+            <div class="ck big">Biggest discount</div>
+            <div class="ck g">[X] day guarantee</div>
+            <a class="btn" href="/checkout?plan=6m">BUY NOW</a>
+            <div class="cards"><span class="cc visa">VISA</span><span class="cc mc"></span><span class="cc disc">DISCOVER</span><span class="cc amex">AMEX</span></div>
+            <div class="tot">TOTAL: <s>$594</s> <b>$297</b></div>
+            <div class="ship">+ <em>FREE</em> SHIPPING [confirm]</div>
+          </div>
+        </div>
+        <div class="pkg">
+          <div class="ph">Most Popular</div>
+          <div class="pb">
+            <h3>3 MONTHS</h3>
+            <div class="sup">60 Capsules</div>
+            <img src="img/pkg-3m.png" alt="Secret Shrooomz 3 month supply">
+            <div class="price"><span class="d">$</span><span class="n">66</span><span class="u">Per<br>Month</span></div>
+            <div class="ck save">You save $98</div>
+            <div class="ck g">[X] day guarantee</div>
+            <a class="btn" href="/checkout?plan=3m">BUY NOW</a>
+            <div class="cards"><span class="cc visa">VISA</span><span class="cc mc"></span><span class="cc disc">DISCOVER</span><span class="cc amex">AMEX</span></div>
+            <div class="tot">TOTAL: <s>$297</s> <b>$199</b></div>
+            <div class="ship">+ FREE SHIPPING [confirm]</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="prod">
+        <img src="img/product.png" alt="Secret Shrooomz">
+        <div>
+          <h3>Secret Shrooomz: [one line on what it is, Michael's words]</h3>
+          <p><b>01</b> [What is in each capsule and how much. Confirm with Michael.]</p>
+          <p><b>02</b> [How you take it: one capsule in the morning on the days in the guide. Confirm.]</p>
+          <p><b>03</b> [How it is made or tested. Only if true.]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dark">
+      <h2>CUSTOMER REVIEWS</h2>
+      <p class="h2sub">What our customers have to say</p>
+      <div class="revs">
+        <div class="rev">
+          <div class="t">Leanne O. <b>"This is the real deal"</b></div>
+          <p>I've been using it for 2 months now and I feel amazing. I took antidepressants for 30 years and they never helped me like this product does.</p>
+          <div class="who"><div class="av">L</div><div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div></div>
+        </div>
+        <div class="rev">
+          <div class="t">Sarah M. <b>"Life feels interesting again!"</b></div>
+          <p>I get this beautiful mindset shift. Socially, I'm more spontaneous and outgoing.</p>
+          <div class="who"><div class="av">S</div><div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div></div>
+        </div>
+        <div class="rev">
+          <div class="t">Linda K. <b>"Haven't felt this good in over 10 years"</b></div>
+          <p>I have even been able to sit down and read a book.</p>
+          <div class="who"><div class="av">L</div><div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div></div>
+        </div>
+      </div>
+
+      <div class="guar">
+        <div class="seal"><small>[X] DAY</small><b>100%</b><small>GUARANTEE</small></div>
+        <div>
+          <h2>Your satisfaction is our #1 priority</h2>
+          <p>[Michael's guarantee in his exact words, e.g. "If you're not happy, email us within X days and we'll make it right." Only what he will honour.]</p>
+          <p>[How to claim it: who to email and what happens next.]</p>
+        </div>
+      </div>
+
+      <div class="faq">
+        <h2>Questions</h2>
+        <h3>How do I take it?</h3>
+        <p>[One capsule in the morning on the days in the guide. Confirm with Michael.]</p>
+        <h3>Will I feel high?</h3>
+        <p>[Michael's answer. Most people say they don't feel anything unusual, they just feel more like themselves.]</p>
+        <h3>How long until it arrives?</h3>
+        <p>[Shipping time and how it's packed.]</p>
+        <h3>What if it's not for me?</h3>
+        <p>[Guarantee, same words as above.]</p>
+      </div>
+    </div>
+
+    <div class="offer">
+      <div class="pkgs" id="pkgs2"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="in">
+      <div>
+        <div class="brand"><svg aria-label="Shrooomz" role="img" width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 10C28 10 12 28 12 44C12 52 18 58 30 58H70C82 58 88 52 88 44C88 28 72 10 50 10Z" fill="#2B5EA7"></path><path d="M50 10C50 10 62 22 62 44H38C38 22 50 10 50 10Z" fill="rgba(255,255,255,0.15)"></path><circle cx="38" cy="32" r="5" fill="rgba(255,255,255,0.3)"></circle><rect x="42" y="58" width="16" height="32" rx="8" fill="#2B5EA7"></rect></svg></div>
+        <a href="/contact">Contact</a><a href="/terms">Terms of Use</a><a href="/privacy">Privacy Policy</a>
+        <a href="/shipping">Shipping Policy</a><a href="/refund">Refund Policy</a>
+      </div>
+      <div>
+        <p>This video and page are for information only and are not medical advice. Talk to your doctor before changing any medication, and if you are pregnant, nursing or have a medical condition.</p>
+        <p>Results vary. The reviews on this page are from real customers and are not a guarantee of results. No individual result should be seen as typical.</p>
+      </div>
+    </div>
+    <div class="copy">Copyright © 2026 Shrooomz LLC. All rights reserved.</div>
+  </footer>
+</div>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search), email = q.get("email");
+    // Second package row near the bottom is a copy of the first.
+    document.getElementById("pkgs2").innerHTML = document.getElementById("pkgs").innerHTML;
+    // Carry the email from the opt-in into every checkout link.
+    if (email) document.querySelectorAll("a.btn").forEach(function (a) {
+      a.href += (a.href.indexOf("?") > -1 ? "&" : "?") + "email=" + encodeURIComponent(email);
+    });
+    // Fallback reveal for the mock-up only. Delete once Vturb's delayed elements are set up.
+    var REVEAL_AT_SECONDS = 375;   // 6:15
+    var show = function () { document.getElementById("offer").classList.add("show"); };
+    if (q.get("reveal") === "1") show(); else setTimeout(show, REVEAL_AT_SECONDS * 1000);
+  })();
+</script>
+<script src="/js/settings.js"></script>
+<script src="/js/funnel.js"></script>
+</body>
+</html>

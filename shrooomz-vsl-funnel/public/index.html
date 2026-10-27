@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watch the free video</title>
+<!--
+  Mock-up for Michael's developer (Hell Rich Media, 25 Oct 2026).
+  New opt-in for the VSL split test: email -> /tabloid-vsl?email=... (instead of /tabloid-checkout).
+  Same look as /tabloid-email-only. Needs on the live version: Meta pixel (PageView + Lead on submit),
+  Cortana script (async), no render-blocking scripts in the head.
+-->
+<style>
+  :root { --bg:#000; --card:#111827; --ink:#fff; --muted:#9ca3af; --gold:#facc15; --line:#374151; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.4; }
+  .wrap { max-width:560px; margin:0 auto; padding:28px 18px 40px; text-align:center; }
+  .pre { display:inline-block; font-size:12px; font-weight:800; letter-spacing:.12em; color:#000; background:var(--gold); padding:6px 10px; border-radius:4px; margin-bottom:16px; }
+  h1 { font-size:30px; line-height:1.15; font-weight:900; margin-bottom:12px; }
+  h1 span { color:var(--gold); }
+  .sub { font-size:17px; font-weight:600; color:#e5e7eb; margin-bottom:22px; }
+  .video { position:relative; border-radius:12px; overflow:hidden; border:2px solid var(--line); background:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)), url('img/video-poster.jpg') center/cover #0b0f19; aspect-ratio:16/9; margin-bottom:18px; display:flex; align-items:center; justify-content:center; }
+  .video .play { width:74px; height:74px; border-radius:50%; background:rgba(250,204,21,.95); display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 10px rgba(250,204,21,.18); }
+  .video .play:after { content:""; border-style:solid; border-width:14px 0 14px 23px; border-color:transparent transparent transparent #000; margin-left:6px; }
+  .video .lock { position:absolute; bottom:10px; left:0; right:0; font-size:13px; font-weight:700; color:#e5e7eb; }
+  .video .len { position:absolute; top:10px; right:10px; font-size:12px; font-weight:700; background:rgba(0,0,0,.75); padding:4px 8px; border-radius:4px; }
+  form { display:grid; gap:12px; margin-bottom:10px; }
+  input { width:100%; font-size:17px; padding:16px; border-radius:10px; border:1px solid var(--line); background:#111827; color:#fff; }
+  button { width:100%; font-size:19px; font-weight:900; padding:17px; border:0; border-radius:10px; background:var(--gold); color:#000; cursor:pointer; box-shadow:0 8px 24px rgba(250,204,21,.25); }
+  .note { font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .fan { font-size:13px; color:var(--muted); margin:14px 0 30px; }
+  h2 { font-size:22px; font-weight:800; margin-bottom:16px; }
+  .rev { text-align:left; background:var(--card); border-left:4px solid var(--gold); border-radius:10px; padding:18px; margin-bottom:14px; }
+  .stars { color:var(--gold); letter-spacing:2px; margin-bottom:8px; }
+  .rev p { font-style:italic; color:#e5e7eb; margin-bottom:10px; }
+  .rev b { color:var(--gold); font-size:14px; }
+  .again { margin-top:26px; }
+  footer { margin-top:30px; font-size:12px; color:var(--muted); }
+  footer a { color:var(--muted); }
+</style>
+</head>
+<body data-page="optin">
+<div class="wrap">
+  <div style="margin-bottom:14px"><svg aria-label="Shrooomz" role="img" width="44" height="44" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 10C28 10 12 28 12 44C12 52 18 58 30 58H70C82 58 88 52 88 44C88 28 72 10 50 10Z" fill="#2B5EA7"></path><path d="M50 10C50 10 62 22 62 44H38C38 22 50 10 50 10Z" fill="rgba(255,255,255,0.15)"></path><circle cx="38" cy="32" r="5" fill="rgba(255,255,255,0.3)"></circle><rect x="42" y="58" width="16" height="32" rx="8" fill="#2B5EA7"></rect></svg></div>
+  <div class="pre">FREE VIDEO</div>
+  <h1>The Mushroom Your Doctor <span>Won't Tell You About</span></h1>
+  <p class="sub">The tiny morning dose people are quietly taking instead of another refill. Enter your email to watch the short free video.</p>
+
+  <div class="video" aria-label="Video preview">
+    <div class="len">8 min</div>
+    <div class="play"></div>
+    <div class="lock">Enter your email below to unlock the video</div>
+  </div>
+
+  <form id="f" action="/watch" method="get">
+    <input type="email" name="email" placeholder="Enter your best email address" required autocomplete="email">
+    <button type="submit">Watch The Free Video Now</button>
+  </form>
+  <p class="note">🔒 No spam. Unsubscribe anytime. Your email stays private.</p>
+  <p class="note">Check your inbox and spam folder too. We'll send you a copy of the video.</p>
+  <p class="fan">If you're happy with another refill, this isn't for you.</p>
+
+  <h2>What People Are Saying</h2>
+  <div class="rev"><div class="stars">★★★★★</div><p>"I've been loving the whole micro-dosing thing. I get this beautiful mindset shift. Socially, I'm more spontaneous and outgoing. Life feels interesting again!"</p><b>Sarah M.</b></div>
+  <div class="rev"><div class="stars">★★★★★</div><p>"Haven't felt this good in over 10 years. I have even been able to sit down and read a book."</p><b>Linda K.</b></div>
+  <div class="rev"><div class="stars">★★★★★</div><p>"Took my first dose this morning and I feel a slight euphoria and a very pronounced energy boost. Everything is brighter and pops out."</p><b>Michelle P.</b></div>
+
+  <div class="again">
+    <form action="/watch" method="get">
+      <input type="email" name="email" placeholder="Enter your best email address" required autocomplete="email">
+      <button type="submit">Watch The Free Video Now</button>
+    </form>
+  </div>
+
+  <footer>Copyright © 2026 Shrooomz. All rights reserved. <a href="/privacy">Privacy</a> | <a href="/terms">Terms</a></footer>
+</div>
+<script src="/js/settings.js"></script>
+<script src="/js/funnel.js"></script>
+</body>
+</html>
