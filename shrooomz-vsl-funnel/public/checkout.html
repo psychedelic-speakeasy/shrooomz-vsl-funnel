@@ -34,6 +34,9 @@
   .btn[disabled] { opacity:.6; cursor:wait; }
   .trust { display:flex; flex-wrap:wrap; justify-content:center; gap:6px 16px; font-size:12px; color:#475569; }
   .demo { background:#0B1F3A; color:#fff; font-size:12px; text-align:center; padding:7px; }
+     select { width:100%; font-size:16px; padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; }
+  .grid3 { display:grid; grid-template-columns:1.5fr 1fr 0.9fr; gap:10px; }
+  .hint { font-size:12px; color:#64748b; margin-top:4px; }
 </style>
 </head>
 <body data-page="checkout">
@@ -56,23 +59,54 @@
     <div class="lines">
       <div><span>Regular price</span><s id="reg"></s></div>
       <div class="save" id="saverow"><span>You save</span><span id="save"></span></div>
-      <div><span>Shipping</span><span>[confirm]</span></div>
+      <div><span>Shipping</span><span id="ship"></span></div>
       <div class="tot"><span>Total today</span><span id="tot"></span></div>
     </div>
   </div>
 
-  <form class="card" id="f">
-    <h2>Your details</h2>
-    <label for="email">Email</label>
-    <input id="email" type="email" required autocomplete="email" placeholder="you@example.com">
-    <label for="cname">Full name</label>
-    <input id="cname" required autocomplete="name" placeholder="First and last name">
-    <div id="pay"></div>
-    <div class="err" id="err"></div>
-  </form>
+ <form id="f">
+    <div class="card">
+      <h2>Your details</h2>
+      <label for="email">Email</label>
+      <input id="email" type="email" required autocomplete="email" placeholder="you@example.com">
+      <label for="cname">Full name</label>
+      <input id="cname" required autocomplete="name" placeholder="First and last name">
+    </div>
 
+    <div class="card">
+      <h2>Where should we ship it?</h2>
+      <label for="line1">Street address</label>
+      <input id="line1" required autocomplete="address-line1" placeholder="123 Main Street">
+      <label for="line2">Apartment, suite, etc. <span style="font-weight:400;color:#64748b">(optional)</span></label>
+      <input id="line2" autocomplete="address-line2" placeholder="Apt 4B">
+      <div class="grid3" style="margin-top:10px">
+        <div>
+          <label for="city">City</label>
+          <input id="city" required autocomplete="address-level2" placeholder="City">
+        </div>
+        <div>
+          <label for="state">State</label>
+          <select id="state" required autocomplete="address-level1">
+            <option value="">Select</option>
+            <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>DC</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+          </select>
+        </div>
+        <div>
+          <label for="zip">ZIP</label>
+          <input id="zip" required autocomplete="postal-code" inputmode="numeric" placeholder="12345">
+        </div>
+      </div>
+      <div class="hint">Ships in a plain box. Nothing on the outside says what's inside.</div>
+    </div>
+
+    <div class="card">
+      <h2>Payment</h2>
+      <div id="pay"></div>
+      <div class="err" id="err"></div>
+    </div>
+  </form>
   <button class="btn" id="go" form="f" type="submit">Complete My Order</button>
-  <div class="trust"><span>🔒 Secure checkout</span><span>📦 Discreet packaging [confirm]</span><span>✅ [X] day guarantee</span></div>
+  <div class="trust"><span>🔒 Secure checkout</span><span>📦 Discreet packaging</span><span>✅ 90-day guarantee</span></div>
 </div>
 <script src="/js/settings.js"></script>
 <script src="/js/funnel.js"></script>
@@ -89,6 +123,7 @@
     $("reg").textContent = "$" + p[3]; $("save").textContent = "$" + (p[3] - p[2]);
     if (p[3] === p[2]) $("saverow").style.display = "none";
     $("tot").textContent = "$" + p[2]; $("email").value = q.get("email") || "";
+    $("ship").textContent = (key === "1m") ? "[shipping rate]" : "FREE";
     $("change").href = "/watch?reveal=1" + (q.get("email") ? "&email=" + encodeURIComponent(q.get("email")) : "");
     try { fbq("track", "InitiateCheckout", { value: p[2], currency: "USD" }); } catch (e) {}
 
@@ -113,11 +148,14 @@
       var go = $("go"), err = $("err"); err.textContent = "";
       var fail = function (m) { err.textContent = m || "Something went wrong. Please try again."; go.disabled = false; go.textContent = "Complete My Order"; };
       go.disabled = true; go.textContent = "Processing...";
+      var ship = { line1: $("line1").value.trim(), line2: $("line2").value.trim(),
+                   city: $("city").value.trim(), state: $("state").value, zip: $("zip").value.trim() };
+      if (!ship.line1 || !ship.city || !ship.state || !ship.zip) return fail("Please complete your shipping address.");
       if (demo) { back.searchParams.set("payment_intent", "demo"); return (location.href = back.pathname + back.search); }
       elements.submit().then(function (r) {
         if (r.error) throw r.error;
         return fetch("/api/checkout", { method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ plan: key, email: $("email").value, name: $("cname").value }) }).then(function (x) { return x.json(); });
+          body: JSON.stringify({ plan: key, email: $("email").value, name: $("cname").value, shipping: ship }) }).then(function (x) { return x.json(); });
       }).then(function (r) {
         if (!r.clientSecret) throw new Error(r.error);
         return stripe.confirmPayment({ elements: elements, clientSecret: r.clientSecret,
