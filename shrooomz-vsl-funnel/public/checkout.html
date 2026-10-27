@@ -126,7 +126,7 @@
     $("reg").textContent = "$" + p[3]; $("save").textContent = "$" + (p[3] - p[2]);
     if (p[3] === p[2]) $("saverow").style.display = "none";
     $("tot").textContent = "$" + p[2]; $("email").value = q.get("email") || "";
-    $("ship").textContent = (key === "1m") ? "[shipping rate]" : "FREE";
+    $("ship").textContent = (key === "1m") ? "$9.99" : "FREE";
     $("change").href = "https://secretshrooomz.com/watch?reveal=1" + (q.get("email") ? "&email=" + encodeURIComponent(q.get("email")) : "");
     try { fbq("track", "InitiateCheckout", { value: p[2], currency: "USD" }); } catch (e) {}
 
