@@ -116,7 +116,10 @@
     var PLANS = { "1m": ["1 Month Supply", "20 capsules", 99, 99, "/img/pkg-1m.png"],
                   "3m": ["3 Month Supply", "60 capsules", 199, 297, "/img/pkg-3m.png"],
                   "6m": ["6 Month Supply", "120 capsules", 297, 594, "/img/pkg-6m.png"] };
-    var q = new URLSearchParams(location.search), key = PLANS[q.get("plan")] ? q.get("plan") : "3m", p = PLANS[key];
+    var q = new URLSearchParams(location.search);
+    var fromPath = (location.pathname.match(/^\/(1|3|6)-month/) || [])[1];
+    var key = PLANS[q.get("plan")] ? q.get("plan") : (fromPath ? fromPath + "m" : "3m");
+    var p = PLANS[key];;
     var $ = function (id) { return document.getElementById(id); };
     $("img").src = p[4]; $("img").alt = p[0];
     $("name").textContent = "Secret Shrooomz " + p[0]; $("sub").textContent = p[1];
@@ -124,7 +127,7 @@
     if (p[3] === p[2]) $("saverow").style.display = "none";
     $("tot").textContent = "$" + p[2]; $("email").value = q.get("email") || "";
     $("ship").textContent = (key === "1m") ? "[shipping rate]" : "FREE";
-    $("change").href = "/watch?reveal=1" + (q.get("email") ? "&email=" + encodeURIComponent(q.get("email")) : "");
+    $("change").href = "https://secretshrooomz.com/watch?reveal=1" + (q.get("email") ? "&email=" + encodeURIComponent(q.get("email")) : "");
     try { fbq("track", "InitiateCheckout", { value: p[2], currency: "USD" }); } catch (e) {}
 
     // 6-month buyers skip upsell 1 (it offers them what they just bought)
