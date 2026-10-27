@@ -21,8 +21,8 @@
     var u = new URL(url, location.origin);
     keep.forEach(function (k) { if (q.get(k) && !u.searchParams.has(k)) u.searchParams.set(k, q.get(k)); });
     Object.keys(extra || {}).forEach(function (k) { u.searchParams.set(k, extra[k]); });
-    return u.pathname + u.search;
-  };
+var same = u.host === location.host;
+    return (same ? "" : u.origin) + u.pathname + u.search;  };
 
   if (page === "optin") {
     document.querySelectorAll("form").forEach(function (f) {
